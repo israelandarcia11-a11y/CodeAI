@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  background: radial-gradient(circle at top, #0b1220, #050914);
+  color: #e6f0ff;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* APP LAYOUT */
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, #0f1b2d, #0a1424);
+  padding: 15px;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  animation: fadeInLeft 0.4s ease;
+}
+
+.sidebar button {
+  width: 100%;
+  padding: 10px;
+  background: #1d4ed8;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: 600;
+}
+
+.sidebar button:hover {
+  background: #2563eb;
+  transform: scale(1.02);
+}
+
+/* CHAT LIST */
+#chatList button {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255,255,255,0.05);
+  border: none;
+  color: #cfe3ff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#chatList button:hover {
+  background: rgba(59,130,246,0.25);
+  transform: translateX(4px);
+}
+
+/* MODELS */
+.models {
+  margin-top: 20px;
+}
+
+.model-card {
+  background: rgba(255,255,255,0.04);
+  padding: 12px;
+  border-radius: 14px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: 0.25s ease;
+  border: 1px solid transparent;
+}
+
+.model-card h3 {
+  font-size: 14px;
+  color: #93c5fd;
+}
+
+.model-card p {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.model-card:hover {
+  transform: translateY(-3px);
+  background: rgba(59,130,246,0.15);
+}
+
+.model-card.active {
+  border: 1px solid #3b82f6;
+  background: rgba(59,130,246,0.2);
+}
+
+/* CHAT AREA */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  animation: fadeIn 0.5s ease;
+}
+
+.chat {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* SCROLLBAR */
+.chat::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat::-webkit-scrollbar-thumb {
+  background: #1d4ed8;
+  border-radius: 10px;
+}
+
+/* MESSAGES */
+.msg {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  max-width: 80%;
+  animation: popIn 0.2s ease;
+  line-height: 1.4;
+}
+
+.msg.user {
+  background: #1d4ed8;
+  margin-left: auto;
+  color: white;
+}
+
+.msg.ai {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* INPUT */
+.input-box {
+  display: flex;
+  padding: 15px;
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.input-box input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: rgba(255,255,255,0.06);
+  color: white;
+  font-size: 15px;
+}
+
+.input-box button {
+  margin-left: 10px;
+  padding: 12px 18px;
+  background: #1d4ed8;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.input-box button:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+/* CODE BLOCKS */
+.code-block {
+  background: #0a0f1c;
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 8px;
+  position: relative;
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #1d4ed8;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s;
+}
+
+.copy-btn:hover {
+  background: #2563eb;
+}
+
+/* TEXT FORMATTING */
+.text b {
+  color: #60a5fa;
+}
+
+.text i {
+  color: #93c5fd;
+}
+
+/* THINKING BAR */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  transition: width 0.2s ease;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.98); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
