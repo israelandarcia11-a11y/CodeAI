@@ -2,10 +2,6 @@ let chats = {};
 let currentChat = null;
 let selectedModel = "phoenix";
 
-let memory = {
-  facts:[]
-};
-
 /* ---------------- INIT ---------------- */
 
 window.onload = () => {
@@ -14,500 +10,301 @@ window.onload = () => {
 
 /* ---------------- ENTER ---------------- */
 
-document.addEventListener("keydown",(e)=>{
-
-    if(e.key==="Enter"){
-
-        const input=document.getElementById("prompt");
-
-        if(document.activeElement===input){
-            send();
-        }
-
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        const input = document.getElementById("prompt");
+        if (document.activeElement === input) send();
     }
-
 });
 
 /* ---------------- MODELS ---------------- */
 
-window.setModel=function(model,el){
-
-    selectedModel=model;
+window.setModel = function (model, el) {
+    selectedModel = model;
 
     document.querySelectorAll(".model-card")
-    .forEach(c=>c.classList.remove("active"));
+        .forEach(c => c.classList.remove("active"));
 
     el.classList.add("active");
-
 };
 
 /* ---------------- CHAT ---------------- */
 
-function newChat(){
+function newChat() {
+    const id = "chat-" + Date.now();
 
-    const id="chat-"+Date.now();
-
-    chats[id]={
-        messages:[]
+    chats[id] = {
+        messages: []
     };
 
-    currentChat=id;
+    currentChat = id;
 
     renderChatList();
     renderChat();
-
 }
 
-window.newChat=newChat;
+window.newChat = newChat;
 
-function switchChat(id){
-
-    currentChat=id;
-
+function switchChat(id) {
+    currentChat = id;
     renderChat();
-
 }
 
-function renderChatList(){
+/* ---------------- CHAT LIST ---------------- */
 
-    const list=document.getElementById("chatList");
+function renderChatList() {
+    const list = document.getElementById("chatList");
+    if (!list) return;
 
-    if(!list) return;
+    list.innerHTML = "";
 
-    list.innerHTML="";
-
-    Object.keys(chats).forEach(id=>{
-
-        const btn=document.createElement("button");
-
-        btn.textContent="💬 "+id.slice(-4);
-
-        btn.onclick=()=>switchChat(id);
-
+    Object.keys(chats).forEach(id => {
+        const btn = document.createElement("button");
+        btn.textContent = "💬 " + id.slice(-4);
+        btn.onclick = () => switchChat(id);
         list.appendChild(btn);
-
     });
-
 }
 
-/* ---------------- COPY ---------------- */
+/* ---------------- COPY CODE ---------------- */
 
-window.copyCode=function(btn){
+window.copyCode = function (btn) {
+    const code = btn.parentElement.querySelector("code");
+    if (!code) return;
 
-    const code=btn.parentElement.querySelector("code");
+    navigator.clipboard.writeText(code.innerText);
 
-    if(!code) return;
+    btn.textContent = "✔";
 
-    navigator.clipboard.writeText(
-        code.innerText
-    );
-
-    btn.textContent="✔";
-
-    setTimeout(()=>{
-
-        btn.textContent="📋";
-
-    },1000);
-
+    setTimeout(() => {
+        btn.textContent = "📋";
+    }, 1000);
 };
 
 /* ---------------- SAFE HTML ---------------- */
 
-function escapeHtml(str=""){
-
+function escapeHtml(str = "") {
     return str
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;");
-
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
-/* ---------------- FORMAT ---------------- */
+/* ---------------- FORMAT TEXT ---------------- */
 
-function formatText(text=""){
+function formatText(text = "") {
+    if (!text) return "";
 
-    if(!text) return "";
+    const parts = text.split("```");
 
-    const parts=text.split("```");
+    let result = "";
 
-    let result="";
+    for (let i = 0; i < parts.length; i++) {
 
-    for(let i=0;i<parts.length;i++){
+        if (i % 2 === 0) {
 
-        if(i%2===0){
+            let txt = escapeHtml(parts[i]);
 
-            let txt=escapeHtml(parts[i]);
-
-            // titulo grande
-            txt=txt.replace(
+            txt = txt.replace(
                 /\*\*\*(.*?)\*\*\*/g,
                 "<div class='big-title'>$1</div>"
             );
 
-            // negrita
-            txt=txt.replace(
+            txt = txt.replace(
                 /\*\*(.*?)\*\*/g,
                 "<strong>$1</strong>"
             );
 
-            // cursiva
-            txt=txt.replace(
+            txt = txt.replace(
                 /\*(.*?)\*/g,
                 "<em>$1</em>"
             );
 
-            // listas
-            txt=txt.replace(
+            txt = txt.replace(
                 /^- (.*)$/gm,
                 "<div class='list-item'>• $1</div>"
             );
 
-            txt=txt.replace(
-                /\n/g,
-                "<br>"
-            );
+            txt = txt.replace(/\n/g, "<br>");
 
-            result+=`
-            <div class="text-block">
-                ${txt}
-            </div>
-            `;
+            result += `<div class="text-block">${txt}</div>`;
 
-        }
+        } else {
 
-        else{
+            let code = parts[i]
+                .replace(/^(lua|python|javascript|js)\n?/i, "")
+                .trim();
 
-            let code=parts[i]
-            .replace(
-                /^(lua|python|javascript|js)\n?/i,
-                ""
-            )
-            .trim();
+            if (!code) continue;
 
-            if(!code) continue;
-
-            result+=`
-
+            result += `
 <pre class="code-block">
-
-<button
-class="copy-btn"
-onclick="copyCode(this)"
->
-
-📋
-
-</button>
-
-<code>
-
-${escapeHtml(code)}
-
-</code>
-
-</pre>
-
-`;
-
+<button class="copy-btn" onclick="copyCode(this)">📋</button>
+<code>${escapeHtml(code)}</code>
+</pre>`;
         }
-
     }
 
     return result;
-
 }
 
 /* ---------------- THINKING ---------------- */
 
-function showThinking(){
+function showThinking() {
+    const chat = document.getElementById("chat");
 
-    const chat=document.getElementById(
-        "chat"
-    );
+    const div = document.createElement("div");
+    div.className = "msg ai";
+    div.id = "thinking";
 
-    const div=document.createElement(
-        "div"
-    );
-
-    div.className="msg ai";
-
-    div.id="thinking";
-
-    div.innerHTML=`
-
+    div.innerHTML = `
 <div>
-
-Pensando
-<span id="dots">
-
-...
-
-</span>
-
+Pensando <span id="dots">...</span>
 </div>
-
 <div class="progress-bar">
-
-<div class="progress-fill">
-
+<div class="progress-fill"></div>
 </div>
-
-</div>
-
 `;
 
     chat.appendChild(div);
 
-    chat.scrollTop=
-    chat.scrollHeight;
+    chat.scrollTop = chat.scrollHeight;
 
-    let dots=0;
+    let dots = 0;
 
-    const dotsInt=
-    setInterval(()=>{
+    const dotsInt = setInterval(() => {
+        const el = document.getElementById("dots");
+        if (!el) return;
 
-        const el=
-        document.getElementById(
-            "dots"
-        );
+        dots = (dots + 1) % 4;
+        el.innerText = ".".repeat(dots);
+    }, 400);
 
-        if(!el) return;
+    let progress = 0;
 
-        dots=(dots+1)%4;
+    const progInt = setInterval(() => {
+        const fill = document.querySelector(".progress-fill");
+        if (!fill) return;
 
-        el.innerText=
-        ".".repeat(dots);
+        progress += Math.random() * 10;
 
-    },400);
+        if (progress > 100) progress = 100;
 
-    let progress=0;
+        fill.style.width = progress + "%";
+    }, 200);
 
-    const progInt=
-    setInterval(()=>{
-
-        const fill=
-        document.querySelector(
-            ".progress-fill"
-        );
-
-        if(!fill) return;
-
-        progress+=
-        Math.random()*8;
-
-        if(progress>100)
-        progress=100;
-
-        fill.style.width=
-        progress+"%";
-
-    },200);
-
-    return{
-        dotsInt,
-        progInt
-    };
-
+    return { dotsInt, progInt };
 }
 
-function removeThinking(obj){
-
+function removeThinking(obj) {
     clearInterval(obj.dotsInt);
-
     clearInterval(obj.progInt);
 
-    const el=
-    document.getElementById(
-        "thinking"
-    );
-
-    if(el) el.remove();
-
+    const el = document.getElementById("thinking");
+    if (el) el.remove();
 }
 
 /* ---------------- RENDER ---------------- */
 
-function renderChat(){
+function renderChat() {
+    const chat = document.getElementById("chat");
+    if (!chat) return;
 
-    const chat=
-    document.getElementById(
-        "chat"
-    );
+    chat.innerHTML = "";
 
-    if(!chat) return;
+    if (!currentChat) return;
 
-    chat.innerHTML="";
-
-    if(!currentChat) return;
-
-    chats[currentChat]
-    .messages
-    .forEach(m=>{
-
-        const div=
-        document.createElement(
-            "div"
-        );
-
-        div.className=
-        "msg "+m.role;
-
-        div.innerHTML=
-        m.text;
-
+    chats[currentChat].messages.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "msg " + m.role;
+        div.innerHTML = m.text;
         chat.appendChild(div);
-
     });
 
-    chat.scrollTop=
-    chat.scrollHeight;
-
+    chat.scrollTop = chat.scrollHeight;
 }
 
-/* ---------------- SEND ---------------- */
+/* ---------------- SEND WITH MEMORY ---------------- */
 
-window.send=async function(){
+window.send = async function () {
+    const input = document.getElementById("prompt");
+    if (!input) return;
 
-    const input=
-    document.getElementById(
-        "prompt"
-    );
+    const text = input.value.trim();
+    if (!text) return;
 
-    if(!input) return;
+    if (!chats[currentChat]) newChat();
 
-    const text=
-    input.value.trim();
-
-    if(!text) return;
-
-    memory.facts.push(text);
-
-    if(memory.facts.length>10)
-    memory.facts.shift();
-
-    chats[currentChat]
-    .messages.push({
-
-        role:"user",
-
-        text:
-        escapeHtml(text)
-
+    /* guardar usuario */
+    chats[currentChat].messages.push({
+        role: "user",
+        text: escapeHtml(text),
+        raw: text
     });
 
     renderChat();
+    input.value = "";
 
-    input.value="";
+    const thinking = showThinking();
 
-    const thinking=
-    showThinking();
+    let systemPrompt =
+        selectedModel === "phoenix"
+            ? "Eres experto en Roblox LuaU. Responde claro, estructurado y con ejemplos."
+            : "Eres experto en Python. Responde claro, profesional y educativo.";
 
-    try{
+    try {
 
-        const res=
-        await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
+        /* 🧠 MEMORIA REAL */
+        const history = chats[currentChat].messages.map(m => ({
+            role: m.role === "ai" ? "assistant" : "user",
+            content: m.raw
+        }));
 
-            method:"POST",
-
-            headers:{
-
-                "Content-Type":
-                "application/json",
-
-                "Authorization":
-                "Bearer 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"
-
-            },
-
-            body:
-            JSON.stringify({
-
-                model:
-                "llama-3.3-70b-versatile",
-
-                messages:[
-
-                    {
-                        role:"system",
-
-                        content:
-                        selectedModel==="phoenix"
-
-                        ?
-
-                        "Experto Roblox LuaU"
-
-                        :
-
-                        "Experto Python"
-
-                    },
-
-                    {
-                        role:"user",
-
-                        content:text
-                    }
-
-                ]
-
-            })
-
-        });
-
-        const data=
-        await res.json();
-
-        removeThinking(
-            thinking
+        const res = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "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"
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        ...history,
+                        { role: "user", content: text }
+                    ]
+                })
+            }
         );
 
-        let reply=
-        data
-        ?.choices?.[0]
-        ?.message
-        ?.content
+        const data = await res.json();
 
-        ||
+        removeThinking(thinking);
 
-        "Sin respuesta";
+        let reply =
+            data?.choices?.[0]?.message?.content ||
+            "Sin respuesta";
 
-        chats[currentChat]
-        .messages.push({
-
-            role:"ai",
-
-            text:
-            formatText(reply)
-
+        chats[currentChat].messages.push({
+            role: "ai",
+            text: formatText(reply),
+            raw: reply
         });
 
         renderChat();
 
-    }
+    } catch (err) {
 
-    catch(err){
+        removeThinking(thinking);
 
-        removeThinking(
-            thinking
-        );
-
-        chats[currentChat]
-        .messages.push({
-
-            role:"ai",
-
-            text:
-            "Error: "+
-            err.message
-
+        chats[currentChat].messages.push({
+            role: "ai",
+            text: "Error: " + err.message,
+            raw: err.message
         });
 
         renderChat();
-
     }
-
 };
