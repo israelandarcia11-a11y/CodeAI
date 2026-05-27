@@ -1,59 +1,58 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CodeAI</title>
-
-  <link rel="stylesheet" href="style.css"/>
-
-  <!-- 🔥 IMPORTANTE: defer evita errores como renderChat undefined -->
-  <script src="script.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeAI</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="app">
+<div class="app">
 
     <!-- SIDEBAR -->
     <div class="sidebar">
 
-      <button onclick="newChat()">➕ Nuevo Chat</button>
+        <button onclick="newChat()">➕ Nuevo chat</button>
 
-      <div id="chatList"></div>
-
-      <hr/>
-
-      <!-- MODELOS -->
-      <div class="models">
+        <h3>Modelos</h3>
 
         <div class="model-card active" onclick="setModel('phoenix', this)">
-          <h3>Phoenix 2.0</h3>
-          <p>Roblox LuaU experto</p>
+            <strong>Phoenix 1.0</strong>
+            <p>Experto en Roblox LuaU</p>
         </div>
 
         <div class="model-card" onclick="setModel('meta', this)">
-          <h3>Meta 2.0</h3>
-          <p>Python experto</p>
+            <strong>Meta 1.0</strong>
+            <p>Experto en Python</p>
         </div>
 
-      </div>
+        <h3>Chats</h3>
+        <div id="chatList"></div>
 
     </div>
 
     <!-- CHAT -->
     <div class="chat-container">
 
-      <div id="chat" class="chat"></div>
+        <div id="chat" class="chat"></div>
 
-      <div class="input-box">
-        <input id="prompt" type="text" placeholder="Escribe un mensaje..." />
-        <button onclick="send()">Enviar</button>
-      </div>
+        <div class="input-box">
+
+            <input id="prompt" type="text" placeholder="Escribe tu mensaje..." />
+
+            <button class="send" onclick="send()">
+                Enviar
+            </button>
+
+        </div>
 
     </div>
 
-  </div>
+</div>
+
+<script src="script.js" defer></script>
 
 </body>
 </html>
