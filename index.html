@@ -2,57 +2,109 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CodeAI</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+margin: 0;
+font-family: Arial;
+background: #0b0f1a;
+color: white;
+}
+
+header {
+padding: 15px;
+background: #111827;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.container {
+padding: 20px;
+}
+
+.card {
+background: #111827;
+padding: 20px;
+border-radius: 12px;
+max-width: 500px;
+}
+
+button {
+padding: 10px 15px;
+border: none;
+border-radius: 8px;
+cursor: pointer;
+background: #3b82f6;
+color: white;
+margin-top: 10px;
+}
+
+button:hover {
+background: #2563eb;
+}
+
+.status {
+margin-top: 10px;
+color: #9ca3af;
+font-size: 14px;
+}
+</style>
+
 </head>
 
 <body>
 
-<div class="app">
+<header>
+<h2>CodeAI</h2>
+<span>🚀 IA en línea</span>
+</header>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
+<div class="container">
 
-        <button onclick="newChat()">➕ Nuevo chat</button>
+<div class="card">
 
-        <h3>Modelos</h3>
+<h3>💎 CodeAI Plus</h3>
 
-        <div class="model-card active" onclick="setModel('phoenix', this)">
-            <strong>Phoenix 1.0</strong>
-            <p>Experto en Roblox LuaU</p>
-        </div>
+<p>Acceso a funciones avanzadas y modelos experimentales</p>
 
-        <div class="model-card" onclick="setModel('meta', this)">
-            <strong>Meta 1.0</strong>
-            <p>Experto en Python</p>
-        </div>
+<p><b>Precio:</b> 4.99$ / mes</p>
 
-        <h3>Chats</h3>
-        <div id="chatList"></div>
+<button onclick="buyPlus()">Comprar ahora</button>
 
-    </div>
-
-    <!-- CHAT -->
-    <div class="chat-container">
-
-        <div id="chat" class="chat"></div>
-
-        <div class="input-box">
-
-            <input id="prompt" type="text" placeholder="Escribe tu mensaje..." />
-
-            <button class="send" onclick="send()">
-                Enviar
-            </button>
-
-        </div>
-
-    </div>
+<div class="status" id="status"></div>
 
 </div>
 
-<script src="script.js" defer></script>
+</div>
+
+<script>
+async function buyPlus() {
+const status = document.getElementById("status");
+status.innerText = "Redirigiendo a Stripe...";
+
+try {
+const res = await fetch("https://codeai-pgko.onrender.com/create-checkout-session", {
+method: "POST",
+headers: {
+"Content-Type": "application/json"
+}
+});
+
+const data = await res.json();
+
+if (data.url) {
+window.location.href = data.url;
+} else {
+status.innerText = "Error al crear sesión de pago";
+}
+
+} catch (err) {
+status.innerText = "Error de conexión con el servidor";
+}
+}
+</script>
 
 </body>
 </html>
