@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 
 const express = require("express");
@@ -7,61 +6,62 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
+/* =========================
+   MIDDLEWARE
+========================= */
+
 app.use(cors());
 app.use(express.json());
 
 /* =========================
-   TEST
+   TEST ROUTE
 ========================= */
 
 app.get("/", (req, res) => {
-res.send("Backend CodeAI funcionando 🚀");
+  res.send("CodeAI Backend funcionando 🚀");
 });
 
 /* =========================
-   CREATE CHECKOUT
+   CREATE STRIPE CHECKOUT
 ========================= */
 
 app.post("/create-checkout-session", async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
 
-try {
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "CodeAI Plus"
+            },
+            unit_amount: 499 // 4.99$
+          },
+          quantity: 1
+        }
+      ],
 
-const session = await stripe.checkout.sessions.create({
+      success_url: "https://https://israelandarcia11-a11y.github.io/CodeAI//success.html",
+      cancel_url: "https://https://israelandarcia11-a11y.github.io/CodeAI//cancel.html"
+    });
 
-payment_method_types: ["card"],
+    res.json({ url: session.url });
 
-line_items: [
-{
-price_data: {
-currency: "usd",
-product_data: {
-name: "CodeAI Plus"
-},
-unit_amount: 499 // 4.99$
-},
-quantity: 1
-}
-],
-
-mode: "payment",
-
-success_url: `${process.env.DOMAIN}/success.html`,
-cancel_url: `${process.env.DOMAIN}/cancel.html`
-
-});
-
-res.json({ url: session.url });
-
-} catch (err) {
-res.status(500).json({ error: err.message });
-}
-
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /* =========================
-   START
+   START SERVER (RENDER SAFE)
 ========================= */
 
-app.listen(3000, () => {
-console.log("Servidor en http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT} 🚀`);
 });
