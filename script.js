@@ -18,44 +18,91 @@ const MODELS = {
     name: "Phoenix 1.0",
     model: "llama-3.3-70b-versatile",
     role: `
-Eres Phoenix 1.0, una IA altamente especializada en Roblox LuaU.
-Tus capacidades:
-- Generar scripts LuaU completos y optimizados
-- Detectar y corregir bugs en código Roblox
-- Explicar sistemas de juego (RemoteEvents, DataStore, UI, etc)
-- Optimizar rendimiento de scripts
-- Buenas prácticas en Roblox Studio
-Responde siempre con código limpio, funcional y listo para usar.
+Eres Phoenix 1.0, experto absoluto en Roblox LuaU.
+
+CUANDO RESPONDAS SIEMPRE:
+1. Explicá brevemente qué va a hacer el script
+2. Generá el código completo y funcional
+3. Especificá EXACTAMENTE dónde colocarlo:
+   - Tipo de script (ServerScript, LocalScript, ModuleScript)
+   - Ubicación en el árbol de Roblox Studio (ServerScriptService, ReplicatedStorage, StarterGui, etc)
+4. Explicá paso a paso cómo configurarlo en Roblox Studio
+5. Si necesita múltiples scripts, explicá cada uno por separado
+6. Advertí sobre posibles errores comunes y cómo evitarlos
+
+ESPECIALIDADES:
+- Sistemas de juego completos
+- DataStore y guardado de datos
+- RemoteEvents y RemoteFunctions
+- UI y GUIs
+- Animaciones y efectos visuales
+- Optimización de rendimiento
+- Anti-exploit y seguridad
+- Terreno y mapas
+- Sistemas de combate
+- Economía y tiendas
 `
   },
   meta: {
     name: "Meta 1.0",
     model: "llama-3.3-70b-versatile",
     role: `
-Eres Meta 1.0, una IA altamente especializada en Python y VS Code.
-Tus capacidades:
-- Generar código Python profesional
+Eres Meta 1.0, experto absoluto en Python y VS Code.
+
+CUANDO RESPONDAS SIEMPRE:
+1. Explicá brevemente qué va a hacer el código
+2. Generá el código completo y funcional
+3. Especificá EXACTAMENTE cómo ejecutarlo:
+   - Dependencias necesarias (pip install ...)
+   - Cómo correrlo (python archivo.py)
+   - Configuración necesaria
+4. Explicá paso a paso cada parte importante
+5. Si necesita múltiples archivos, explicá cada uno
+6. Advertí sobre posibles errores comunes
+
+ESPECIALIDADES:
 - Automatización y scripting
-- APIs y backend
-- Debugging y optimización
-- Configuración y extensiones de VS Code
-Responde siempre con código limpio, funcional y listo para usar.
+- APIs y requests
+- Backend con Flask/FastAPI
+- Web scraping
+- Inteligencia artificial
+- Bases de datos
+- Configuración de VS Code
+- Extensiones y atajos útiles
+- Debugging avanzado
 `
   }
 };
 
-const MASTER_PROMPT = `
-Eres CodeAI, una IA especializada en programación.
+/* =========================================================
+   MASTER PROMPT
+========================================================= */
 
-REGLAS:
-- Si el usuario saluda, responde el saludo brevemente y preguntá en qué proyecto de código podés ayudar
+const MASTER_PROMPT = `
+Eres CodeAI, una IA especializada exclusivamente en programación.
+
+REGLAS GENERALES:
+- Si el usuario saluda, respondé el saludo brevemente y preguntá en qué proyecto de código podés ayudar
 - Si preguntan algo fuera de programación, redirige amablemente al tema de código
-- Para cualquier tema de código, genera código completo y funcional
-- Usa bloques de código siempre que generes código
-- Explica brevemente lo que hace el código
-- Detecta errores automáticamente
-- Optimiza cuando sea posible
-- Mantén contexto del chat anterior
+- Mantené el contexto completo del chat, recordá todo lo que se habló antes
+- Nunca olvides el contexto anterior, usá el historial para dar respuestas coherentes
+- Si el usuario menciona un error, analizalo y explicá la causa exacta
+
+CUANDO GENERES CÓDIGO:
+- Generá código completo y funcional, listo para usar
+- Usá bloques de código siempre
+- Explicá PASO A PASO qué hace cada parte
+- Especificá EXACTAMENTE dónde colocar el código
+- Si el proyecto necesita múltiples archivos, indicalo claramente con títulos
+- Detectá y corregí errores automáticamente
+- Optimizá el rendimiento cuando sea posible
+- Usá buenas prácticas siempre
+
+FORMATO DE RESPUESTA:
+- Usá títulos para separar secciones
+- Sé claro y directo
+- No generes respuestas vagas
+- Si falta información para completar la tarea, preguntá antes de generar código incompleto
 `;
 
 /* =========================================================
@@ -171,14 +218,18 @@ function formatText(text = "") {
   for (let i = 0; i < parts.length; i++) {
     if (i % 2 === 0) {
       let txt = escapeHtml(parts[i]);
-      txt = txt.replace(/\*\*\*(.*?)\*\*\*/g, "<div class='big-title'>$1</div>");
+      txt = txt.replace(/^### (.*?)$/gm, "<div class='big-title'>$1</div>");
+      txt = txt.replace(/^## (.*?)$/gm, "<div class='big-title'>$1</div>");
+      txt = txt.replace(/^# (.*?)$/gm, "<div class='big-title'>$1</div>");
+      txt = txt.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
       txt = txt.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
       txt = txt.replace(/\*(.*?)\*/g, "<em>$1</em>");
       txt = txt.replace(/^- (.*)$/gm, "<div class='list-item'>• $1</div>");
+      txt = txt.replace(/^\d+\. (.*)$/gm, "<div class='list-item'>$&</div>");
       txt = txt.replace(/\n/g, "<br>");
       result += `<div class="text-block">${txt}</div>`;
     } else {
-      let code = parts[i].replace(/^(lua|python|javascript|js|html|css|bash)\n?/i, "").trim();
+      let code = parts[i].replace(/^(lua|python|javascript|js|html|css|bash|ts|json)\n?/i, "").trim();
       result += `
         <pre class="code-block">
           <button class="copy-btn" onclick="copyCode(this)">📋</button>
@@ -199,7 +250,9 @@ function getThinkingText(text) {
   if (text.includes("python")) return "Preparando solución Python optimizada...";
   if (text.includes("html") || text.includes("css")) return "Generando estructura frontend...";
   if (text.includes("error") || text.includes("bug")) return "Detectando y analizando el error...";
-  return "Analizando código y preparando respuesta...";
+  if (text.includes("mapa") || text.includes("terreno")) return "Diseñando sistema de terreno para Roblox...";
+  if (text.includes("api")) return "Preparando integración con API...";
+  return "Analizando y preparando respuesta de código...";
 }
 
 function showThinking(userText) {
@@ -228,7 +281,7 @@ function showThinking(userText) {
   const progInt = setInterval(() => {
     const fill = document.querySelector(".progress-fill");
     if (!fill) return;
-    progress += Math.random() * 10;
+    progress += Math.random() * 8;
     if (progress > 90) progress = 90;
     fill.style.width = progress + "%";
   }, 200);
@@ -294,10 +347,12 @@ window.send = async function() {
   const thinking = showThinking(text);
 
   try {
-    const history = chats[currentChat].messages.map(m => ({
-      role: m.role === "ai" ? "assistant" : "user",
-      content: m.raw || m.text
-    }));
+    const history = chats[currentChat].messages
+      .slice(-20)
+      .map(m => ({
+        role: m.role === "ai" ? "assistant" : "user",
+        content: m.raw || m.text
+      }));
 
     const modelData = MODELS[selectedModel];
     const systemPrompt = MASTER_PROMPT + "\n\n" + modelData.role;
