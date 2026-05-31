@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<<<<<<< Updated upstream
 <div class="app">
     <div class="sidebar">
         <button onclick="newChat()">➕ Nuevo chat</button>
@@ -31,5 +32,74 @@
     </div>
 </div>
 <script src="script.js" defer></script>
+=======
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+
+    <button onclick="newChat()">➕ Nuevo chat</button>
+
+    <h3>Modelos</h3>
+
+    <div class="model-card active" onclick="setModel('phoenix', this)">
+      <strong>🔥 Phoenix 1.0</strong>
+      <p>Experto en Roblox LuaU</p>
+    </div>
+
+    <div class="model-card" onclick="setModel('meta', this)">
+      <strong>🧠 Meta 1.0</strong>
+      <p>Experto en Python y VS Code</p>
+    </div>
+
+    <h3>Chats</h3>
+    <div id="chatList"></div>
+
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="chat-container">
+
+    <div class="topbar">
+      <span class="topbar-title">⚡ CodeAI</span>
+    </div>
+
+    <div id="chat" class="chat"></div>
+
+    <div class="input-box">
+      <input id="prompt" type="text" placeholder="Escribe tu código o pregunta..." />
+      <button class="send" onclick="send()">Enviar</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ACCOUNT PANEL -->
+<div class="account-wrapper">
+  <div class="account-panel" id="accountPanel">
+    <div>
+      <div class="account-name">👤 Usuario</div>
+      <div class="account-plan">CodeAI Free</div>
+    </div>
+  </div>
+  <div class="account-menu hidden" id="accountMenu">
+    <button onclick="openModal('plans')">💎 Ver planes</button>
+    <button onclick="openModal('settings')">⚙ Configuración</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal hidden" id="modal">
+  <div class="modal-box">
+    <div id="modalContent"></div>
+    <button class="close-btn" onclick="closeModal()">Cerrar</button>
+  </div>
+</div>
+
+<script src="script.js" defer></script>
+
+>>>>>>> Stashed changes
 </body>
 </html>
