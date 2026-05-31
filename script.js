@@ -1,75 +1,82 @@
+/* =========================================================
+   CODEAI - SCRIPT PRINCIPAL
+========================================================= */
+
 let chats = {};
 let currentChat = null;
 let selectedModel = "phoenix";
+let userPlan = "free";
+
+const BACKEND = "https://codeai-backend-yc0i.onrender.com";
+
+/* =========================================================
+   MODELS
+========================================================= */
 
 const MODELS = {
   phoenix: {
     name: "Phoenix 1.0",
     model: "llama-3.3-70b-versatile",
     role: `
-Eres experto absoluto en:
-- Roblox LuaU
-- Sistemas de juego
-- Optimización Roblox
-- RemoteEvents
-- UI Roblox
-- Scripts completos y funcionales
+Eres Phoenix 1.0, una IA altamente especializada en Roblox LuaU.
+Tus capacidades:
+- Generar scripts LuaU completos y optimizados
+- Detectar y corregir bugs en código Roblox
+- Explicar sistemas de juego (RemoteEvents, DataStore, UI, etc)
+- Optimizar rendimiento de scripts
+- Buenas prácticas en Roblox Studio
+Responde siempre con código limpio, funcional y listo para usar.
 `
   },
   meta: {
     name: "Meta 1.0",
     model: "llama-3.3-70b-versatile",
     role: `
-Eres experto absoluto en:
-- Python
-- JavaScript
-- APIs
-- Backend
-- Frontend
-- Automatización
-- Inteligencia artificial
+Eres Meta 1.0, una IA altamente especializada en Python y VS Code.
+Tus capacidades:
+- Generar código Python profesional
+- Automatización y scripting
+- APIs y backend
+- Debugging y optimización
+- Configuración y extensiones de VS Code
+Responde siempre con código limpio, funcional y listo para usar.
 `
   }
 };
 
 const MASTER_PROMPT = `
-Eres CodeAI Ultimate.
+Eres CodeAI, una IA especializada exclusivamente en programación.
+NO eres un asistente general. Solo respondes temas de código.
 
-OBJETIVOS:
-- Resolver problemas con precisión
-- Generar código profesional
-- Explicar claramente
-- Detectar errores automáticamente
-- Optimizar scripts
-- Mantener memoria contextual
-
-COMPORTAMIENTO:
-- Responde estructuradamente
-- Usa títulos si ayuda
-- Usa bloques de código limpios
-- Piensa antes de responder
-- Evita respuestas vagas
-- Explica errores
-- Mantén continuidad del chat
-
-CUANDO GENERES CÓDIGO:
-- Haz scripts completos
-- Optimiza rendimiento
-- Detecta bugs
-- Usa buenas prácticas
-- Hazlo listo para usar
-
-ESTILO:
-- Profesional
-- Inteligente
-- Técnico
-- Natural
+REGLAS:
+- Genera código completo y funcional
+- Usa bloques de código siempre
+- Explica brevemente lo que hace el código
+- Detecta errores automáticamente
+- Optimiza cuando sea posible
+- Mantén contexto del chat anterior
+- Si te preguntan algo fuera de programación, redirige al tema de código
 `;
 
-window.onload = () => {
+/* =========================================================
+   INIT
+========================================================= */
+
+window.addEventListener("DOMContentLoaded", () => {
   loadMemory();
-  newChat();
-};
+  if (Object.keys(chats).length === 0) newChat();
+  else {
+    currentChat = Object.keys(chats)[0];
+    renderChatList();
+    renderChat();
+  }
+  checkUserPlan();
+  initAccountMenu();
+});
+
+/* =========================================================
+   ENTER TO SEND
+========================================================= */
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
@@ -78,6 +85,10 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+/* =========================================================
+   MODELS
+========================================================= */
+
 window.setModel = function(model, el) {
   selectedModel = model;
   document.querySelectorAll(".model-card").forEach(c => c.classList.remove("active"));
@@ -85,16 +96,18 @@ window.setModel = function(model, el) {
   localStorage.setItem("selectedModel", model);
 };
 
-function newChat() {
+/* =========================================================
+   CHAT SYSTEM
+========================================================= */
+
+window.newChat = function() {
   const id = "chat-" + Date.now();
   chats[id] = { messages: [] };
   currentChat = id;
   saveMemory();
   renderChatList();
   renderChat();
-}
-
-window.newChat = newChat;
+};
 
 function switchChat(id) {
   currentChat = id;
@@ -107,11 +120,15 @@ function renderChatList() {
   list.innerHTML = "";
   Object.keys(chats).reverse().forEach(id => {
     const btn = document.createElement("button");
-    btn.textContent = "💬 " + id.slice(-4);
+    btn.textContent = "💬 Chat " + id.slice(-4);
     btn.onclick = () => switchChat(id);
     list.appendChild(btn);
   });
 }
+
+/* =========================================================
+   MEMORY
+========================================================= */
 
 function saveMemory() {
   localStorage.setItem("codeai_chats", JSON.stringify(chats));
@@ -124,6 +141,17 @@ function loadMemory() {
   if (savedModel) selectedModel = savedModel;
 }
 
+/* =========================================================
+   UTILS
+========================================================= */
+
+function escapeHtml(str = "") {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 window.copyCode = function(btn) {
   const code = btn.parentElement.querySelector("code");
   if (!code) return;
@@ -132,12 +160,9 @@ window.copyCode = function(btn) {
   setTimeout(() => { btn.textContent = "📋"; }, 1000);
 };
 
-function escapeHtml(str = "") {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
+/* =========================================================
+   FORMAT
+========================================================= */
 
 function formatText(text = "") {
   if (!text) return "";
@@ -153,20 +178,28 @@ function formatText(text = "") {
       txt = txt.replace(/\n/g, "<br>");
       result += `<div class="text-block">${txt}</div>`;
     } else {
-      let code = parts[i].replace(/^(lua|python|javascript|js|html|css)\n?/i, "").trim();
-      result += `<pre class="code-block"><button class="copy-btn" onclick="copyCode(this)">📋</button><code>${escapeHtml(code)}</code></pre>`;
+      let code = parts[i].replace(/^(lua|python|javascript|js|html|css|bash)\n?/i, "").trim();
+      result += `
+        <pre class="code-block">
+          <button class="copy-btn" onclick="copyCode(this)">📋</button>
+          <code>${escapeHtml(code)}</code>
+        </pre>`;
     }
   }
   return result;
 }
 
+/* =========================================================
+   THINKING
+========================================================= */
+
 function getThinkingText(text) {
   text = text.toLowerCase();
-  if (text.includes("roblox")) return "Analizando entorno Roblox y preparando solución LuaU...";
+  if (text.includes("roblox") || text.includes("lua")) return "Analizando entorno Roblox y preparando solución LuaU...";
   if (text.includes("python")) return "Preparando solución Python optimizada...";
-  if (text.includes("html")) return "Generando estructura frontend moderna...";
-  if (text.includes("script")) return "Analizando lógica y optimizando código...";
-  return "Procesando intención del usuario...";
+  if (text.includes("html") || text.includes("css")) return "Generando estructura frontend...";
+  if (text.includes("error") || text.includes("bug")) return "Detectando y analizando el error...";
+  return "Analizando código y preparando respuesta...";
 }
 
 function showThinking(userText) {
@@ -182,6 +215,7 @@ function showThinking(userText) {
   `;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
+
   let dots = 0;
   const dotsInt = setInterval(() => {
     const el = document.getElementById("dots");
@@ -189,14 +223,16 @@ function showThinking(userText) {
     dots = (dots + 1) % 4;
     el.innerText = ".".repeat(dots);
   }, 400);
+
   let progress = 0;
   const progInt = setInterval(() => {
     const fill = document.querySelector(".progress-fill");
     if (!fill) return;
     progress += Math.random() * 10;
-    if (progress > 100) progress = 100;
+    if (progress > 90) progress = 90;
     fill.style.width = progress + "%";
   }, 200);
+
   return { dotsInt, progInt };
 }
 
@@ -208,9 +244,17 @@ window.toggleThinkingPanel = function() {
 function removeThinking(obj) {
   clearInterval(obj.dotsInt);
   clearInterval(obj.progInt);
-  const el = document.getElementById("thinking");
-  if (el) el.remove();
+  const fill = document.querySelector(".progress-fill");
+  if (fill) fill.style.width = "100%";
+  setTimeout(() => {
+    const el = document.getElementById("thinking");
+    if (el) el.remove();
+  }, 300);
 }
+
+/* =========================================================
+   RENDER CHAT
+========================================================= */
 
 function renderChat() {
   const chat = document.getElementById("chat");
@@ -225,6 +269,10 @@ function renderChat() {
   });
   chat.scrollTop = chat.scrollHeight;
 }
+
+/* =========================================================
+   SEND
+========================================================= */
 
 window.send = async function() {
   const input = document.getElementById("prompt");
@@ -248,13 +296,13 @@ window.send = async function() {
   try {
     const history = chats[currentChat].messages.map(m => ({
       role: m.role === "ai" ? "assistant" : "user",
-      content: m.raw
+      content: m.raw || m.text
     }));
 
     const modelData = MODELS[selectedModel];
     const systemPrompt = MASTER_PROMPT + "\n\n" + modelData.role;
 
-    const response = await fetch("https://codeai-pgko.onrender.com/chat", {
+    const response = await fetch(`${BACKEND}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -268,11 +316,9 @@ window.send = async function() {
     });
 
     const data = await response.json();
-
     removeThinking(thinking);
 
     let reply = data?.choices?.[0]?.message?.content;
-
     if (!reply) reply = "Error: la IA no devolvió respuesta.";
 
     chats[currentChat].messages.push({
@@ -296,33 +342,56 @@ window.send = async function() {
   }
 };
 
+/* =========================================================
+   ACCOUNT MENU
+========================================================= */
+
+function initAccountMenu() {
+  const panel = document.getElementById("accountPanel");
+  const menu = document.getElementById("accountMenu");
+  if (!panel || !menu) return;
+  panel.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.classList.toggle("hidden");
+  });
+  document.addEventListener("click", () => {
+    menu.classList.add("hidden");
+  });
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
 window.openModal = function(type) {
   const modal = document.getElementById("modal");
   const content = document.getElementById("modalContent");
   modal.classList.remove("hidden");
+
   if (type === "plans") {
     content.innerHTML = `
-      <h2>💎 CodeAI Plans</h2>
+      <h2>💎 CodeAI Plus</h2>
       <div style="margin-top:15px;padding:15px;border-radius:12px;background:#0f1629;border:1px solid #1c2a4a;">
-        <h3>CodeAI Plus</h3>
         <p style="opacity:0.8;margin-top:10px;">
           ✔ Modelos experimentales<br>
           ✔ Respuestas más rápidas<br>
           ✔ Prioridad en servidores
         </p>
         <h2 style="margin-top:15px;">4,99$ / Mes</h2>
-        <button onclick="buyPlan()" style="width:100%;padding:10px;margin-top:15px;border:none;border-radius:10px;background:#2d6cdf;color:white;">
+        <button onclick="buyPlan()" style="width:100%;padding:10px;margin-top:15px;border:none;border-radius:10px;background:#2d6cdf;color:white;cursor:pointer;">
           💳 Comprar ahora
         </button>
       </div>
       <p style="font-size:12px;opacity:0.6;margin-top:10px;">Pago seguro vía Stripe</p>
     `;
   }
+
   if (type === "settings") {
     content.innerHTML = `
       <h2>⚙ Configuración</h2>
-      <button onclick="clearChats()" style="width:100%;padding:10px;margin-top:10px;border:none;border-radius:10px;background:#2d6cdf;color:white;">🗑 Borrar chats</button>
-      <button onclick="resetAll()" style="width:100%;padding:10px;margin-top:10px;border:none;border-radius:10px;background:#1f3b6b;color:white;">♻ Reset completo</button>
+      <button onclick="resetAll()" style="width:100%;padding:10px;margin-top:10px;border:none;border-radius:10px;background:#1f3b6b;color:white;cursor:pointer;">
+        ♻ Borrar todo y reiniciar
+      </button>
     `;
   }
 };
@@ -331,41 +400,39 @@ window.closeModal = function() {
   document.getElementById("modal").classList.add("hidden");
 };
 
+/* =========================================================
+   STRIPE
+========================================================= */
+
 window.buyPlan = async function() {
   try {
-    const res = await fetch("https://codeai-pgko.onrender.com/create-checkout-session", {
+    const res = await fetch(`${BACKEND}/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ plan: "plus" })
     });
-    if (!res.ok) {
-      const err = await res.json();
-      alert("Error del servidor: " + err.error);
-      return;
-    }
     const data = await res.json();
     if (data.url) window.location.href = data.url;
-    else alert("Error creando pago");
+    else alert("Error creando sesión de pago");
   } catch(err) {
     alert("Error de conexión: " + err.message);
   }
 };
 
-window.resetAll = function() {
-  localStorage.clear();
-  location.reload();
-};
+/* =========================================================
+   PLAN
+========================================================= */
 
 async function checkUserPlan() {
   try {
-    const res = await fetch("https://codeai-pgko.onrender.com/get-plan");
+    const res = await fetch(`${BACKEND}/get-plan`);
     const data = await res.json();
     if (data.plan) {
       userPlan = data.plan;
       applyPlanUI();
     }
   } catch(err) {
-    console.log("Backend no conectado, modo free");
+    console.log("Modo free");
   }
 }
 
@@ -373,3 +440,12 @@ function applyPlanUI() {
   const el = document.querySelector(".account-plan");
   if (el && userPlan === "plus") el.textContent = "CodeAI Plus 💎";
 }
+
+/* =========================================================
+   RESET
+========================================================= */
+
+window.resetAll = function() {
+  localStorage.clear();
+  location.reload();
+};
